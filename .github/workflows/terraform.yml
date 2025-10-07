@@ -1,0 +1,47 @@
+﻿name: Terraform CI/CD
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_GITHUB_CI_ROLE_ARN }}
+        aws-region: eu-west-1
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.9.8
+        
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      
+    - name: Terraform Init - Dev
+      run: terraform init
+      working-directory: ./minimal-dev
+      
+    - name: Terraform Plan - Dev  
+      run: terraform plan -no-color
+      working-directory: ./minimal-dev
+      
+    - name: Terraform Apply - Dev
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: terraform apply -auto-approve
+      working-directory: ./minimal-dev
