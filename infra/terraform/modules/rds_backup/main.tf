@@ -2,7 +2,6 @@ locals { final_vault_name = coalesce(var.vault_name, "rds-backup-${var.env}") }
 
 resource "aws_backup_vault" "this" {
   name = local.final_vault_name
-  encryption_key_arn = null
 }
 
 resource "aws_backup_plan" "this" {
@@ -21,7 +20,7 @@ resource "aws_backup_plan" "this" {
 resource "aws_backup_selection" "this" {
   name         = "rds-selection-${var.env}"
   iam_role_arn = aws_iam_role.backup.arn
-  backup_plan_id = aws_backup_plan.this.id
+  plan_id      = aws_backup_plan.this.id
   selection_tag {
     type  = "STRINGEQUALS"
     key   = var.selection_tag_key
@@ -32,7 +31,7 @@ resource "aws_backup_selection" "this" {
 resource "aws_iam_role" "backup" {
   name = "aws-backup-${var.env}-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Effect = "Allow", Principal = { Service = "backup.amazonaws.com" }, Action = "sts:AssumeRole" }]
   })
 }

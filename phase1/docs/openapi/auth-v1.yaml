@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: XXX Auth API
+  version: 1.0.0
+servers:
+  - url: https://api.stage.xxx.example
+paths:
+  /v1/auth/login:
+    post:
+      summary: Login/Sign-up federato
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Accesso effettuato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Richiesta non valida
+        '401':
+          description: Token non valido o provider non supportato
+  /v1/auth/refresh:
+    post:
+      summary: Rigenera token di accesso
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token rigenerati
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: Refresh token non valido
+  /v1/auth/me:
+    get:
+      summary: Recupera profilo utente autenticato
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profilo trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Token non valido
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - provider
+        - id_token
+        - device_id
+      properties:
+        provider:
+          type: string
+          enum: [apple, google, email]
+        id_token:
+          type: string
+        device_id:
+          type: string
+      example:
+        provider: google
+        id_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        device_id: device-123
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    RefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+          maxLength: 2
+        lang:
+          type: string
+          nullable: true
+          maxLength: 2
+        status:
+          type: string
+          enum: [active, banned]

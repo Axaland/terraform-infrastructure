@@ -1,0 +1,75 @@
+workflows:
+  phase1_ios_testflight:
+    name: Phase 1 iOS → TestFlight
+    max_build_duration: 60
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+        - pattern: release/*
+          include: true
+    environment:
+      flutter: stable
+      xcode: latest
+      groups:
+        - app_store_connect
+        - ios_signing_assets
+      vars:
+        FLUTTER_BUILD_DIR: build
+        FLUTTER_TARGET: lib/main.dart
+        ENTRY_WORKDIR: phase1/apps/mobile
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+        - phase1/apps/mobile/build
+        - phase1/apps/mobile/ios/Pods
+    scripts:
+      - name: Show environment
+        script: |
+          flutter --version
+          xcodebuild -version
+      - name: Fetch Flutter dependencies
+        working_directory: $ENTRY_WORKDIR
+        script: flutter pub get
+      - name: Run Flutter tests
+        working_directory: $ENTRY_WORKDIR
+        script: flutter test
+      - name: Install CocoaPods
+        working_directory: $ENTRY_WORKDIR/ios
+        script: |
+          pod repo update
+          pod install
+      - name: Build IPA (release)
+        working_directory: $ENTRY_WORKDIR
+        script: |
+          flutter build ipa \
+            --release \
+            --build-name=$PROJECT_BUILD_NAME \
+            --build-number=$PROJECT_BUILD_NUMBER
+    artifacts:
+      - phase1/apps/mobile/build/ios/ipa/*.ipa
+      - phase1/apps/mobile/build/ios/archive/*.xcarchive
+    publishing:
+      email:
+        recipients:
+          - $NOTIFY_EMAIL
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth:
+          api_key: $APP_STORE_CONNECT_API_KEY
+          key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+          issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - Internal QA
+    code_signing:
+      certificates:
+        - certificate: $IOS_DISTRIBUTION_CERT_P12
+          password: $IOS_DISTRIBUTION_CERT_PASSWORD
+      provisioning_profiles:
+        - $IOS_PROVISIONING_PROFILE

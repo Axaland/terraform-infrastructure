@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket         = "tfstate-terraform-infrastructure-eu-west-1"
-    key            = "dev/terraform.tfstate" 
+    key            = "dev/terraform.tfstate"
     region         = "eu-west-1"
     dynamodb_table = "tf-lock-terraform-infrastructure"
     encrypt        = true
@@ -32,14 +32,14 @@ provider "aws" {
 
 # IAM role per GitHub OIDC
 resource "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-  client_id_list = ["sts.amazonaws.com"]
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
 resource "aws_iam_role" "github_ci" {
   name = "github-ci-role-dev"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -81,5 +81,5 @@ output "ci_role_arn" {
 }
 
 output "test_bucket" {
-  value = aws_s3_bucket.test.bucket  
+  value = aws_s3_bucket.test.bucket
 }

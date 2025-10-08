@@ -1,10 +1,10 @@
 module "vpc" {
-  source              = "../modules/vpc"
-  name                = "${var.env_name}-vpc"
-  cidr_block          = var.vpc_cidr
-  enable_nat          = true
-  public_subnet_cidrs = var.public_subnets
-  private_subnet_cidrs= var.private_subnets
+  source               = "../modules/vpc"
+  name                 = "${var.env_name}-vpc"
+  cidr_block           = var.vpc_cidr
+  enable_nat           = var.enable_nat
+  public_subnet_cidrs  = var.public_subnets
+  private_subnet_cidrs = var.private_subnets
 }
 
 module "rds" {
@@ -23,14 +23,35 @@ module "ecr" {
 }
 
 module "service" {
-  source            = "../modules/ecs_fargate_service"
-  env               = var.env_name
-  service_name      = "app"
-  image             = var.service_image
-  private_subnet_ids= module.vpc.private_subnet_ids
-  vpc_id            = module.vpc.vpc_id
+  source             = "../modules/ecs_fargate_service"
+  env                = var.env_name
+  service_name       = "app"
+  image              = var.service_image
+  private_subnet_ids = module.vpc.private_subnet_ids
+  vpc_id             = module.vpc.vpc_id
+  load_balancer_arn  = aws_lb.app.arn
   secrets = {
     DB_PASSWORD = module.rds.db_secret_arn
+  }
+}
+
+resource "aws_security_group" "alb" {
+  name        = "${var.env_name}-alb-sg"
+  description = "Ingress HTTP per ALB ${var.env_name}"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -40,14 +61,7 @@ resource "aws_lb" "app" {
   internal           = false
   load_balancer_type = "application"
   subnets            = module.vpc.public_subnet_ids
-  security_groups    = []
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.app.arn
-  port              = 80
-  protocol          = "HTTP"
-  default_action { type = "forward" target_group_arn = module.service.target_group_arn }
+  security_groups    = [aws_security_group.alb.id]
 }
 
 module "waf" {
@@ -58,20 +72,20 @@ module "waf" {
 }
 
 module "budget" {
-  source  = "../modules/budgets"
-  env     = var.env_name
-  amount  = var.monthly_budget_amount
-  emails  = var.budget_alert_emails
-  tags    = { Environment = var.env_name }
+  source = "../modules/budgets"
+  env    = var.env_name
+  amount = var.monthly_budget_amount
+  emails = var.budget_alert_emails
+  tags   = { Environment = var.env_name }
 }
 
 module "security_baseline" {
   source                         = "../modules/security_baseline"
   env                            = var.env_name
   config_snapshot_retention_days = 120
-  enable_guardduty               = true
+  enable_guardduty               = var.enable_guardduty
   enable_config                  = true
-  required_tags                  = ["Environment","Owner","CostCenter"]
+  required_tags                  = ["Environment", "Owner", "CostCenter"]
 }
 
 module "dashboard" {

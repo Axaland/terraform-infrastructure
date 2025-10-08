@@ -1,0 +1,9 @@
+{
+  "apiBaseUrl": "http://localhost:3000",
+  "featureFlags": {
+    "ff.onboarding.v1": true,
+    "ff.catalog.v1": false,
+    "ff.leaderboard.v1": false,
+    "ff.wallet.readonly": false
+  }
+}

@@ -7,54 +7,54 @@ locals {
   dashboard_body = jsonencode({
     widgets = [
       {
-        type = "text"
-        x = 0
-        y = 0
-        width = 24
-        height = 2
+        type       = "text"
+        x          = 0
+        y          = 0
+        width      = 24
+        height     = 2
         properties = { markdown = "# Observability ${var.env}\nECS, RDS, ALB metrics" }
       },
       {
-        type = "metric"
-        x = 0
-        y = 2
-        width = 8
+        type   = "metric"
+        x      = 0
+        y      = 2
+        width  = 8
         height = 6
         properties = {
-          title  = "ECS CPU %"
-            metrics = [["AWS/ECS","CPUUtilization","ClusterName",var.ecs_cluster_name,"ServiceName",var.ecs_service_name,{"stat":"Average"}]]
-          period = 300
-          region = "eu-west-1"
-          stat   = "Average"
-          view   = "timeSeries"
+          title   = "ECS CPU %"
+          metrics = [["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", var.ecs_service_name, { "stat" : "Average" }]]
+          period  = 300
+          region  = "eu-west-1"
+          stat    = "Average"
+          view    = "timeSeries"
         }
       },
       {
-        type = "metric"
-        x = 8
-        y = 2
-        width = 8
+        type   = "metric"
+        x      = 8
+        y      = 2
+        width  = 8
         height = 6
         properties = {
-          title  = "RDS Conn"
-          metrics = [["AWS/RDS","DatabaseConnections","DBInstanceIdentifier",var.db_instance_id,{"stat":"Average"}]]
-          period = 300
-          region = "eu-west-1"
-          stat   = "Average"
-          view   = "timeSeries"
+          title   = "RDS Conn"
+          metrics = [["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.db_instance_id, { "stat" : "Average" }]]
+          period  = 300
+          region  = "eu-west-1"
+          stat    = "Average"
+          view    = "timeSeries"
         }
       },
       {
-        type = "metric"
-        x = 16
-        y = 2
-        width = 8
+        type   = "metric"
+        x      = 16
+        y      = 2
+        width  = 8
         height = 6
         properties = {
-          title  = "ALB 4xx/5xx"
+          title = "ALB 4xx/5xx"
           metrics = [
-            ["AWS/ApplicationELB","HTTPCode_ELB_4XX_Count","LoadBalancer",local.lb_suffix,{"stat":"Sum"}],
-            ["AWS/ApplicationELB","HTTPCode_ELB_5XX_Count","LoadBalancer",local.lb_suffix,{"stat":"Sum"}]
+            ["AWS/ApplicationELB", "HTTPCode_ELB_4XX_Count", "LoadBalancer", local.lb_suffix, { "stat" : "Sum" }],
+            ["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count", "LoadBalancer", local.lb_suffix, { "stat" : "Sum" }]
           ]
           period = 300
           region = "eu-west-1"
@@ -63,32 +63,32 @@ locals {
         }
       },
       {
-        type = "metric"
-        x = 0
-        y = 8
-        width = 12
+        type   = "metric"
+        x      = 0
+        y      = 8
+        width  = 12
         height = 6
         properties = {
-          title  = "ALB Target Latency"
-          metrics = [["AWS/ApplicationELB","TargetResponseTime","TargetGroup",local.tg_suffix,"LoadBalancer",local.lb_suffix,{"stat":"Average"}]]
-          period = 300
-          region = "eu-west-1"
-          stat   = "Average"
-          view   = "timeSeries"
+          title   = "ALB Target Latency"
+          metrics = [["AWS/ApplicationELB", "TargetResponseTime", "TargetGroup", local.tg_suffix, "LoadBalancer", local.lb_suffix, { "stat" : "Average" }]]
+          period  = 300
+          region  = "eu-west-1"
+          stat    = "Average"
+          view    = "timeSeries"
         }
       },
       {
-        type = "metric"
-        x = 12
-        y = 8
-        width = 12
+        type   = "metric"
+        x      = 12
+        y      = 8
+        width  = 12
         height = 6
         properties = {
-          title  = "RDS Storage & IOPS"
+          title = "RDS Storage & IOPS"
           metrics = [
-            ["AWS/RDS","FreeStorageSpace","DBInstanceIdentifier",var.db_instance_id,{"stat":"Minimum"}],
-            ["AWS/RDS","WriteIOPS","DBInstanceIdentifier",var.db_instance_id,{"stat":"Average"}],
-            ["AWS/RDS","ReadIOPS","DBInstanceIdentifier",var.db_instance_id,{"stat":"Average"}]
+            ["AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", var.db_instance_id, { "stat" : "Minimum" }],
+            ["AWS/RDS", "WriteIOPS", "DBInstanceIdentifier", var.db_instance_id, { "stat" : "Average" }],
+            ["AWS/RDS", "ReadIOPS", "DBInstanceIdentifier", var.db_instance_id, { "stat" : "Average" }]
           ]
           period = 300
           region = "eu-west-1"

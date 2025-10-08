@@ -1,6 +1,7 @@
 resource "random_password" "password" {
-  length  = 24
-  special = true
+  length           = 24
+  special          = true
+  override_special = "!#$%^&*()-_=+[]{}<>?"
 }
 
 resource "aws_secretsmanager_secret" "db" {
@@ -30,8 +31,16 @@ resource "aws_security_group" "db" {
       cidr_blocks = [ingress.value]
     }
   }
-  egress { from_port = 0 to_port = 0 protocol = "-1" cidr_blocks = ["0.0.0.0/0"] }
-  tags = { Name = "rds-${var.env}-sg" }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "rds-${var.env}-sg"
+  }
 }
 
 resource "aws_db_instance" "this" {

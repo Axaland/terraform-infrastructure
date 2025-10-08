@@ -12,9 +12,9 @@ resource "aws_iam_role" "task_exec" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -24,22 +24,40 @@ resource "aws_iam_role_policy_attachment" "task_exec" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy" "task_exec_secrets" {
+  name = "${var.env}-${var.service_name}-exec-secrets"
+  role = aws_iam_role.task_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = [for s in values(var.secrets) : s]
+      }
+    ]
+  })
+}
+
 locals {
-  container_secrets = [ for k, v in var.secrets : { name = k, valueFrom = v } ]
+  container_secrets = [for k, v in var.secrets : { name = k, valueFrom = v }]
+  container_environment = [for k, v in var.environment : { name = k, value = v }]
   container_def = {
-    name      = var.service_name
-    image     = var.image
-    essential = true
+    name         = var.service_name
+    image        = var.image
+    essential    = true
     portMappings = [{ containerPort = var.container_port, hostPort = var.container_port, protocol = "tcp" }]
     logConfiguration = {
       logDriver = "awslogs"
       options = {
         awslogs-group         = aws_cloudwatch_log_group.this.name
-        awslogs-region        = data.aws_region.current.name
+        awslogs-region        = data.aws_region.current.id
         awslogs-stream-prefix = "ecs"
       }
     }
     secrets = local.container_secrets
+    environment = local.container_environment
   }
 }
 
@@ -59,7 +77,18 @@ resource "aws_security_group" "service" {
   name        = "${var.env}-${var.service_name}-sg"
   description = "Service ingress"
   vpc_id      = var.vpc_id
-  egress { from_port = 0 to_port = 0 protocol = "-1" cidr_blocks = ["0.0.0.0/0"] }
+  ingress {
+    from_port       = var.container_port
+    to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [var.alb_security_group_id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_lb_target_group" "this" {
@@ -68,7 +97,21 @@ resource "aws_lb_target_group" "this" {
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc_id
-  health_check { path = "/" matcher = "200-399" }
+  health_check {
+    path    = var.health_check_path
+    matcher = "200-399"
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = var.load_balancer_arn
+  port              = var.listener_port
+  protocol          = var.listener_protocol
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this.arn
+  }
 }
 
 resource "aws_ecs_service" "this" {
@@ -87,6 +130,7 @@ resource "aws_ecs_service" "this" {
     container_port   = var.container_port
   }
   lifecycle { ignore_changes = [desired_count] }
+  depends_on = [aws_lb_listener.http]
 }
 
 resource "aws_appautoscaling_target" "ecs" {
@@ -104,7 +148,7 @@ resource "aws_appautoscaling_policy" "cpu" {
   scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
   service_namespace  = aws_appautoscaling_target.ecs.service_namespace
   target_tracking_scaling_policy_configuration {
-    target_value       = 50
+    target_value = 50
     predefined_metric_specification { predefined_metric_type = "ECSServiceAverageCPUUtilization" }
     scale_in_cooldown  = 60
     scale_out_cooldown = 60

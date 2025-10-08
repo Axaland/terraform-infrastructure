@@ -2,7 +2,10 @@ data "aws_iam_policy_document" "oidc_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
     effect  = "Allow"
-    principals { type = "Federated" identifiers = [aws_iam_openid_connect_provider.github.arn] }
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
@@ -24,7 +27,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 data "aws_iam_policy_document" "ci_inline" {
   statement {
-    sid     = "DescribeReadOnly"
+    sid = "DescribeReadOnly"
     actions = [
       "ec2:Describe*",
       "rds:Describe*",
@@ -66,8 +69,8 @@ data "aws_iam_policy_document" "ci_inline" {
   }
 
   statement {
-    sid      = "PassRoleLimited"
-    actions  = ["iam:PassRole"]
+    sid       = "PassRoleLimited"
+    actions   = ["iam:PassRole"]
     resources = var.allowed_passrole_arns
     condition {
       test     = "StringEquals"
@@ -77,7 +80,7 @@ data "aws_iam_policy_document" "ci_inline" {
   }
 
   statement {
-    sid     = "SecretsReadLimited"
+    sid = "SecretsReadLimited"
     actions = [
       "secretsmanager:GetSecretValue",
       "secretsmanager:DescribeSecret"
@@ -97,4 +100,6 @@ resource "aws_iam_role_policy" "ci_inline" {
   policy = data.aws_iam_policy_document.ci_inline.json
 }
 
-output "ci_role_arn" { value = aws_iam_role.github_actions_ci.arn }
+output "ci_role_arn" {
+  value = aws_iam_role.github_actions_ci.arn
+}
