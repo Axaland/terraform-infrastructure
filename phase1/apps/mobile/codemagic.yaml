@@ -69,7 +69,7 @@ workflows:
           - Internal QA
     code_signing:
       certificates:
-        - certificate: $IOS_DISTRIBUTION_CERT_P12
-          password: $IOS_DISTRIBUTION_CERT_PASSWORD
+        - certificate: $CERTIFICATE_PRIVATE_KEY
+          password: $CERTIFICATE_PASSWORD
       provisioning_profiles:
-        - $IOS_PROVISIONING_PROFILE
+        - $PROVISIONING_PROFILE
