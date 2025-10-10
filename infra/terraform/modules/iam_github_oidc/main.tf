@@ -1,10 +1,27 @@
+data "aws_caller_identity" "current" {}
+
+locals {
+  default_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  count           = var.create_oidc_provider ? 1 : 0
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+locals {
+  github_oidc_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : coalesce(var.oidc_provider_arn, local.default_oidc_provider_arn)
+}
+
 data "aws_iam_policy_document" "oidc_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
     effect  = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
+      identifiers = [local.github_oidc_arn]
     }
     condition {
       test     = "StringLike"
@@ -17,12 +34,6 @@ data "aws_iam_policy_document" "oidc_assume" {
       values   = ["sts.amazonaws.com"]
     }
   }
-}
-
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
 data "aws_iam_policy_document" "ci_inline" {
@@ -102,4 +113,8 @@ resource "aws_iam_role_policy" "ci_inline" {
 
 output "ci_role_arn" {
   value = aws_iam_role.github_actions_ci.arn
+}
+
+output "oidc_provider_arn" {
+  value = local.github_oidc_arn
 }

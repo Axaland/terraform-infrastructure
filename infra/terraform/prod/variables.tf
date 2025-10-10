@@ -48,9 +48,24 @@ variable "service_image_tag" {
   default = "latest"
 }
 
+variable "github_org" {
+  type    = string
+  default = "AXALAND"
+}
+
+variable "github_repo" {
+  type    = string
+  default = "terraform-infrastructure"
+}
+
 variable "monthly_budget_amount" {
   type    = number
   default = 2500
+}
+
+variable "cost_anomaly_threshold" {
+  type    = number
+  default = 400
 }
 
 variable "budget_alert_emails" {
@@ -59,6 +74,39 @@ variable "budget_alert_emails" {
     "finops@example.com",
     "security@example.com",
     "cto@example.com"
+  ]
+}
+
+variable "cost_anomaly_emails" {
+  type = list(string)
+  default = [
+    "finops@example.com",
+    "security@example.com"
+  ]
+}
+
+variable "cost_anomaly_forecast_threshold" {
+  type    = number
+  default = 500
+}
+
+variable "cost_anomaly_monitor_tags" {
+  type = map(string)
+  default = {
+    Environment = "prod"
+  }
+}
+
+variable "cost_anomaly_enable_forecast" {
+  type    = bool
+  default = true
+}
+
+variable "alert_emails" {
+  type = list(string)
+  default = [
+    "platform@example.com",
+    "security@example.com"
   ]
 }
 
@@ -79,10 +127,58 @@ variable "enable_nat" {
 
 variable "enable_guardduty" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_config" {
   type    = bool
-  default = false
+  default = true
+}
+
+variable "rds_rotation_interval_days" {
+  type    = number
+  default = 30
+}
+
+variable "healthcheck_schedule_expression" {
+  type    = string
+  default = "rate(5 minutes)"
+}
+
+variable "synthetic_timeout_seconds" {
+  type    = number
+  default = 60
+}
+
+variable "config_notification_emails" {
+  type = list(string)
+  default = [
+    "platform@example.com",
+    "security@example.com"
+  ]
+}
+
+variable "chatops_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "chatops_slack_team_id" {
+  type    = string
+  default = "T0123456789"
+}
+
+variable "chatops_slack_channel_id" {
+  type    = string
+  default = "C0123456789"
+}
+
+variable "chatops_iam_role_arn" {
+  type    = string
+  default = "arn:aws:iam::123456789012:role/AWSChatbot-Notifications"
+}
+
+variable "enable_conformance_pack" {
+  type    = bool
+  default = true
 }

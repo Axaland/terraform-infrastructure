@@ -35,7 +35,22 @@ variable "db_user" {
 
 variable "service_image" {
   type    = string
-  default = "000000000000.dkr.ecr.eu-west-1.amazonaws.com/app:latest"
+  default = ""
+}
+
+variable "github_org" {
+  type    = string
+  default = "AXALAND"
+}
+
+variable "github_repo" {
+  type    = string
+  default = "terraform-infrastructure"
+}
+
+variable "service_image_tag" {
+  type    = string
+  default = "2430acc-amd64"
 }
 
 variable "monthly_budget_amount" {
@@ -43,9 +58,51 @@ variable "monthly_budget_amount" {
   default = 200
 }
 
+variable "cost_anomaly_threshold" {
+  type    = number
+  default = 50
+}
+
 variable "budget_alert_emails" {
   type    = list(string)
   default = ["finops@example.com"]
+}
+
+variable "cost_anomaly_emails" {
+  type    = list(string)
+  default = ["finops@example.com"]
+}
+
+variable "cost_anomaly_forecast_threshold" {
+  type    = number
+  default = 75
+}
+
+variable "cost_anomaly_monitor_tags" {
+  type = map(string)
+  default = {
+    Environment = "dev"
+  }
+}
+
+variable "cost_anomaly_enable_forecast" {
+  type    = bool
+  default = true
+}
+
+variable "alert_emails" {
+  type    = list(string)
+  default = ["marco.papagni@libero.it"]
+}
+
+variable "config_notification_emails" {
+  type    = list(string)
+  default = ["marco.papagni@libero.it"]
+}
+
+variable "enable_conformance_pack" {
+  type    = bool
+  default = false
 }
 
 variable "waf_rate_limit" {
@@ -60,10 +117,35 @@ variable "rds_allowed_cidrs" {
 
 variable "enable_nat" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_guardduty" {
   type    = bool
   default = false
+}
+
+variable "backup_replica_region" {
+  type    = string
+  default = "eu-central-1"
+}
+
+variable "backup_replica_vault_name" {
+  type    = string
+  default = null
+}
+
+variable "healthcheck_schedule_expression" {
+  type    = string
+  default = "rate(5 minutes)"
+}
+
+variable "synthetic_timeout_seconds" {
+  type    = number
+  default = 60
+}
+
+variable "rds_rotation_interval_days" {
+  type    = number
+  default = 30
 }

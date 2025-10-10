@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Operational Best Practices for CIS-aligned controls (subset) for XXX workloads.
+Resources:
+  CisCloudTrailEnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: cis-cloudtrail-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUD_TRAIL_ENABLED
+
+  CisCloudWatchAlarms:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: cis-cloudwatch-alarm-action-check
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUDWATCH_ALARM_ACTION_CHECK
+
+  CisIamPasswordPolicy:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: cis-iam-password-policy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+      InputParameters:
+        RequireLowercaseCharacters: 'true'
+        RequireUppercaseCharacters: 'true'
+        RequireSymbols: 'true'
+        RequireNumbers: 'true'
+        MinimumPasswordLength: '14'
+        PasswordReusePrevention: '24'
+        MaxPasswordAge: '90'
+
+  CisRootAccountMfa:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: cis-root-account-mfa-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: ROOT_ACCOUNT_MFA_ENABLED
+
+  CisS3BucketLogging:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: cis-s3-bucket-logging-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_LOGGING_ENABLED

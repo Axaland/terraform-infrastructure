@@ -41,7 +41,7 @@ resource "aws_iam_role_policy" "task_exec_secrets" {
 }
 
 locals {
-  container_secrets = [for k, v in var.secrets : { name = k, valueFrom = v }]
+  container_secrets     = [for k, v in var.secrets : { name = k, valueFrom = v }]
   container_environment = [for k, v in var.environment : { name = k, value = v }]
   container_def = {
     name         = var.service_name
@@ -56,7 +56,7 @@ locals {
         awslogs-stream-prefix = "ecs"
       }
     }
-    secrets = local.container_secrets
+    secrets     = local.container_secrets
     environment = local.container_environment
   }
 }
@@ -159,3 +159,5 @@ output "service_name" { value = aws_ecs_service.this.name }
 output "cluster_arn" { value = aws_ecs_cluster.this.arn }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
 output "target_group_arn" { value = aws_lb_target_group.this.arn }
+output "task_execution_role_arn" { value = aws_iam_role.task_exec.arn }
+output "task_execution_role_name" { value = aws_iam_role.task_exec.name }

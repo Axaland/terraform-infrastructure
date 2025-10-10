@@ -38,14 +38,56 @@ variable "service_image" {
   default = "000000000000.dkr.ecr.eu-west-1.amazonaws.com/app:latest"
 }
 
+variable "github_org" {
+  type    = string
+  default = "AXALAND"
+}
+
+variable "github_repo" {
+  type    = string
+  default = "terraform-infrastructure"
+}
+
 variable "monthly_budget_amount" {
   type    = number
   default = 600
 }
 
+variable "cost_anomaly_threshold" {
+  type    = number
+  default = 150
+}
+
 variable "budget_alert_emails" {
   type    = list(string)
   default = ["finops@example.com", "platform@example.com"]
+}
+
+variable "cost_anomaly_emails" {
+  type    = list(string)
+  default = ["finops@example.com", "platform@example.com"]
+}
+
+variable "cost_anomaly_forecast_threshold" {
+  type    = number
+  default = 200
+}
+
+variable "cost_anomaly_monitor_tags" {
+  type = map(string)
+  default = {
+    Environment = "stage"
+  }
+}
+
+variable "cost_anomaly_enable_forecast" {
+  type    = bool
+  default = true
+}
+
+variable "alert_emails" {
+  type    = list(string)
+  default = ["platform@example.com"]
 }
 
 variable "waf_rate_limit" {
@@ -65,10 +107,55 @@ variable "enable_nat" {
 
 variable "enable_guardduty" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_config" {
   type    = bool
-  default = false
+  default = true
+}
+
+variable "rds_rotation_interval_days" {
+  type    = number
+  default = 30
+}
+
+variable "config_notification_emails" {
+  type    = list(string)
+  default = ["platform@example.com"]
+}
+
+variable "healthcheck_schedule_expression" {
+  type    = string
+  default = "rate(5 minutes)"
+}
+
+variable "synthetic_timeout_seconds" {
+  type    = number
+  default = 60
+}
+
+variable "chatops_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "enable_conformance_pack" {
+  type    = bool
+  default = true
+}
+
+variable "chatops_slack_team_id" {
+  type    = string
+  default = "T0123456789"
+}
+
+variable "chatops_slack_channel_id" {
+  type    = string
+  default = "C0123456789"
+}
+
+variable "chatops_iam_role_arn" {
+  type    = string
+  default = "arn:aws:iam::123456789012:role/AWSChatbot-Notifications"
 }

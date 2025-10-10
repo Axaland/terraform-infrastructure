@@ -26,3 +26,13 @@ variable "vault_name" {
   type    = string
   default = null
 }
+
+variable "enable_cross_region_copy" {
+  type    = bool
+  default = false
+}
+
+variable "copy_destination_vault_name" {
+  type    = string
+  default = null
+}

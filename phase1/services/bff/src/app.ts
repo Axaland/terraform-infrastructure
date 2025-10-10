@@ -23,6 +23,12 @@ export const createApp = () => {
       legacyHeaders: false
     })
   );
+  app.get('/', (_req, res) => {
+    res.status(200).json({ status: 'ok', service: 'bff', env: process.env.NODE_ENV ?? 'unknown' });
+  });
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
   app.use('/v1/auth', authRouter);
   app.use(errorHandler);
   return app;

@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../application/auth_notifier.dart';
-import '../widgets/provider_login_button.dart';
+import '../model/auth_session.dart';
+import 'widgets/provider_login_button.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -72,20 +73,27 @@ class _SuccessView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(authSessionProvider).value;
+    final sessionAsync = ref.watch(authSessionProvider);
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.celebration, size: 48),
-          const SizedBox(height: 16),
-          Text('Bentornato, ${session?.nickname ?? 'Player'}!'),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => ref.read(authSessionProvider.notifier).logout(),
-            child: const Text('Logout'),
-          ),
-        ],
+      child: sessionAsync.when(
+        data: (session) {
+          final nickname = session is AuthenticatedSession ? session.nickname : 'Player';
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.celebration, size: 48),
+              const SizedBox(height: 16),
+              Text('Bentornato, $nickname!'),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => ref.read(authSessionProvider.notifier).logout(),
+                child: const Text('Logout'),
+              ),
+            ],
+          );
+        },
+        loading: () => const CircularProgressIndicator(),
+        error: (err, stack) => Text('Errore: $err'),
       ),
     );
   }

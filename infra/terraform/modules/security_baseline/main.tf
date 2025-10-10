@@ -16,10 +16,60 @@ variable "enable_config" {
   type    = bool
   default = true
 }
+
+variable "config_notification_emails" {
+  type        = list(string)
+  default     = []
+  description = "Lista di indirizzi email da iscrivere agli alert di compliance AWS Config"
+}
+
+variable "managed_rules" {
+  description = "Configurazione delle regole AWS Config gestite da distribuire"
+  type = list(object({
+    name              = string
+    source_identifier = string
+    input_parameters  = optional(map(string))
+  }))
+  default = [
+    {
+      name              = "s3-bucket-public-read-prohibited"
+      source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
+    },
+    {
+      name              = "s3-bucket-public-write-prohibited"
+      source_identifier = "S3_BUCKET_PUBLIC_WRITE_PROHIBITED"
+    },
+    {
+      name              = "rds-storage-encrypted"
+      source_identifier = "RDS_STORAGE_ENCRYPTED"
+    },
+    {
+      name              = "ebs-encryption-by-default"
+      source_identifier = "EBS_ENCRYPTION_BY_DEFAULT"
+    },
+    {
+      name              = "incoming-ssh-disabled"
+      source_identifier = "INCOMING_SSH_DISABLED"
+      input_parameters  = { sshFromPort = 22, sshToPort = 22 }
+    }
+  ]
+}
 variable "required_tags" {
   type        = list(string)
   default     = ["Environment", "Owner"]
   description = "Lista dei tag richiesti per la regola AWS Config required-tags"
+}
+
+variable "enable_conformance_pack" {
+  type        = bool
+  default     = false
+  description = "Se true, distribuisce un AWS Config Conformance Pack alignato al CIS"
+}
+
+variable "conformance_pack_name" {
+  type        = string
+  default     = null
+  description = "Nome custom per il conformance pack (default: <env>-cis-ops)"
 }
 
 data "aws_caller_identity" "current" {}
@@ -31,6 +81,10 @@ locals {
   required_tags_map = {
     for idx, tag in local.required_tags_limited :
     "tag${idx + 1}Key" => tag
+  }
+  managed_rules_map = {
+    for rule in var.managed_rules :
+    rule.name => rule
   }
 }
 
@@ -143,7 +197,21 @@ resource "aws_config_delivery_channel" "this" {
   count          = var.enable_config ? 1 : 0
   name           = "${var.env}-delivery"
   s3_bucket_name = aws_s3_bucket.config_snapshots[0].bucket
+  sns_topic_arn  = aws_sns_topic.config_notifications[0].arn
   depends_on     = [aws_config_configuration_recorder.this]
+}
+
+resource "aws_sns_topic" "config_notifications" {
+  count        = var.enable_config ? 1 : 0
+  name         = "config-compliance-${var.env}"
+  display_name = "${var.env} AWS Config compliance"
+}
+
+resource "aws_sns_topic_subscription" "config_notifications_email" {
+  for_each  = var.enable_config ? toset(var.config_notification_emails) : []
+  topic_arn = aws_sns_topic.config_notifications[0].arn
+  protocol  = "email"
+  endpoint  = each.value
 }
 
 resource "aws_s3_bucket_policy" "config_snapshots" {
@@ -202,7 +270,33 @@ resource "aws_config_config_rule" "required_tags" {
   depends_on       = [aws_config_configuration_recorder_status.this]
 }
 
+resource "aws_config_config_rule" "managed" {
+  for_each = var.enable_config ? local.managed_rules_map : {}
+  name     = "${each.key}-${var.env}"
+  source {
+    owner             = "AWS"
+    source_identifier = each.value.source_identifier
+  }
+  input_parameters = lookup(each.value, "input_parameters", null) == null ? null : jsonencode(each.value.input_parameters)
+  depends_on       = [aws_config_configuration_recorder_status.this]
+}
+
+resource "aws_config_conformance_pack" "cis" {
+  count         = var.enable_config && var.enable_conformance_pack ? 1 : 0
+  name          = coalesce(var.conformance_pack_name, "${var.env}-cis-ops")
+  template_body = file("${path.module}/templates/cis_operational_best_practices.yaml")
+  depends_on    = [aws_config_configuration_recorder_status.this]
+}
+
 output "required_tags_rule_name" { value = try(aws_config_config_rule.required_tags[0].name, null) }
 
 output "guardduty_detector_id" { value = try(aws_guardduty_detector.this[0].id, null) }
 output "config_bucket_name" { value = try(aws_s3_bucket.config_snapshots[0].bucket, null) }
+output "config_sns_topic_arn" { value = try(aws_sns_topic.config_notifications[0].arn, null) }
+output "config_rule_names" {
+  value = var.enable_config ? [for rule in aws_config_config_rule.managed : rule.name] : []
+}
+
+output "conformance_pack_name" {
+  value = try(aws_config_conformance_pack.cis[0].name, null)
+}

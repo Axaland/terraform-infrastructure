@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/app_config.dart';
 import 'core/telemetry/telemetry.dart';
+import 'features/auth/application/auth_notifier.dart';
+import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_gate.dart';
 import 'features/onboarding/presentation/onboarding_page.dart';
 import 'features/profile/presentation/profile_page.dart';
@@ -42,6 +44,7 @@ Future<void> main() async {
 class _ShellApp extends ConsumerWidget {
   const _ShellApp();
 
+  @override
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter(

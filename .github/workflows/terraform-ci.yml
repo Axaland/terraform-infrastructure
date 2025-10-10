@@ -1,6 +1,15 @@
 name: terraform-ci
 
 on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-ci.yml"
+  push:
+    branches: [ main ]
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-ci.yml"
   workflow_dispatch:
     inputs:
       environment:
@@ -10,40 +19,49 @@ on:
         options: [dev, stage, prod]
       apply:
         type: boolean
-        description: "Apply changes?"
+        description: "Esegui terraform apply dopo il plan"
         default: false
-  push:
-    branches: [ main ]
+      refresh_service:
+        type: boolean
+        description: "Forza un nuovo deployment ECS (post-rotazione secret)"
+        default: false
+      service_name:
+        type: string
+        description: "Nome del servizio ECS da aggiornare"
+        default: "app"
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  terraform:
+  plan:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: eu-west-1
+      TF_ENV: ${{ github.event.inputs.environment || 'dev' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_CI_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Terraform fmt (check)
+        run: terraform fmt -recursive -check
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.5
 
+      - name: Configure AWS Credentials (OIDC)
+        if: github.event_name == 'workflow_dispatch'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_CI_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Select environment path
         id: envpath
-        run: |
-          ENV=${{ github.event.inputs.environment || 'dev' }}
-          echo "env_dir=infra/terraform/${ENV}" >> $GITHUB_OUTPUT
+        run: echo "env_dir=infra/terraform/${TF_ENV}" >> $GITHUB_OUTPUT
 
       - name: Terraform Init
         working-directory: ${{ steps.envpath.outputs.env_dir }}
@@ -55,36 +73,69 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ steps.envpath.outputs.env_dir }}
-        run: terraform plan -input=false
+        run: terraform plan -input=false -out=tfplan
 
-      - name: Terraform Apply (conditional)
-        if: ${{ github.event.inputs.apply == 'true' }}
-        working-directory: ${{ steps.envpath.outputs.env_dir }}
-        run: terraform apply -input=false -auto-approve
+      - name: Upload plan
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-${{ env.TF_ENV }}-plan
+          path: ${{ steps.envpath.outputs.env_dir }}/tfplan
 
-  build-push:
-    needs: terraform
+  apply:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' }}
+    needs: plan
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.apply == 'true' }}
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      AWS_REGION: eu-west-1
+      TF_ENV: ${{ github.event.inputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
 
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_GITHUB_CI_ROLE_ARN }}
-          aws-region: eu-west-1
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Select environment path
+        id: envpath
+        run: echo "env_dir=infra/terraform/${TF_ENV}" >> $GITHUB_OUTPUT
 
-      - name: Build & Push Image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_REPO: app
-          IMAGE_TAG: latest
+      - name: Terraform Init
+        working-directory: ${{ steps.envpath.outputs.env_dir }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: ${{ steps.envpath.outputs.env_dir }}
+        run: terraform apply -input=false -auto-approve
+
+  refresh-service:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.refresh_service == 'true' }}
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      AWS_REGION: eu-west-1
+      TF_ENV: ${{ github.event.inputs.environment || 'dev' }}
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'app' }}
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_CI_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Force new ECS deployment
         run: |
-          docker build -t $ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG
+          aws ecs update-service \
+            --cluster "${TF_ENV}-${SERVICE_NAME}-cluster" \
+            --service "${SERVICE_NAME}" \
+            --force-new-deployment

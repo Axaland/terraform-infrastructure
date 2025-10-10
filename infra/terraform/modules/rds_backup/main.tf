@@ -1,7 +1,27 @@
-locals { final_vault_name = coalesce(var.vault_name, "rds-backup-${var.env}") }
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      configuration_aliases = [aws.replica]
+    }
+  }
+}
+
+locals {
+  final_vault_name      = coalesce(var.vault_name, "rds-backup-${var.env}")
+  copy_destination_name = coalesce(var.copy_destination_vault_name, "rds-backup-${var.env}-replica")
+  cross_region_copy     = var.enable_cross_region_copy
+  copy_actions_enabled  = local.cross_region_copy ? [1] : []
+}
 
 resource "aws_backup_vault" "this" {
   name = local.final_vault_name
+}
+
+resource "aws_backup_vault" "replica" {
+  count    = local.cross_region_copy ? 1 : 0
+  provider = aws.replica
+  name     = local.copy_destination_name
 }
 
 resource "aws_backup_plan" "this" {
@@ -13,6 +33,13 @@ resource "aws_backup_plan" "this" {
     lifecycle {
       cold_storage_after = var.cold_storage_after
       delete_after       = var.delete_after
+    }
+
+    dynamic "copy_action" {
+      for_each = local.copy_actions_enabled
+      content {
+        destination_vault_arn = aws_backup_vault.replica[0].arn
+      }
     }
   }
 }
@@ -43,3 +70,4 @@ resource "aws_iam_role_policy_attachment" "backup" {
 
 output "backup_vault_name" { value = aws_backup_vault.this.name }
 output "backup_plan_id" { value = aws_backup_plan.this.id }
+output "replica_vault_name" { value = try(aws_backup_vault.replica[0].name, null) }
