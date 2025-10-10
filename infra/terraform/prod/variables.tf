@@ -50,7 +50,7 @@ variable "service_image_tag" {
 
 variable "github_org" {
   type    = string
-  default = "AXALAND"
+  default = "Axaland"
 }
 
 variable "github_repo" {
