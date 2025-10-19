@@ -1,5 +1,12 @@
 # Session Log – 08/10/2025
 
+## Aggiornamenti 19/10/2025 – Rotazione credenziali AWS
+- Creato nuovo access key pair IAM (`AKIA35LNLK3VI337KQN2`) per l'utente `AXALAND-1` tramite console con caso d'uso *Interfaccia a riga di comando (CLI)*.
+- Aggiornati i file locali `C:\Users\axala\.aws\credentials` e `C:\Users\axala\.aws\config`; verificato l'accesso con `aws sts get-caller-identity --no-cli-pager`.
+- Confermato che in IAM non risultano altre chiavi attive per l'utente (rotazione completata, nessuna chiave legacy da dismettere).
+- Verificati i segreti GitHub Actions: il repository usa esclusivamente l'ARN di ruolo OIDC (`AWS_GITHUB_CI_ROLE_ARN`), quindi non è necessario salvare la nuova chiave.
+- Prossimi passi: monitorare le pipeline CI al prossimo run e programmare la prossima rotazione entro 90 giorni.
+
 ## Contesto operativo
 - **Data/Ora locale**: 08/10/2025 11:56 CEST
 - **Root progetto**: `C:\Users\axala\OneDrive\Desktop\Backup_Infrastruttura_2025-10-05_18-09\new`
