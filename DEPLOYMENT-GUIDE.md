@@ -1,5 +1,7 @@
 ﻿#  TERRAFORM ENTERPRISE INFRASTRUCTURE - DEPLOYMENT GUIDE
 
+> **Nota:** Per la descrizione completa delle directory utilizzate da script e Terraform consulta sempre `DIRECTORY-GUIDE.md`.
+
 ##  INFRASTRUTTURA AWS COMPLETATA
 
 ###  Risorse Deployate

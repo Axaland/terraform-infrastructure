@@ -1,0 +1,17 @@
+node_modules/
+.pnpm-store/
+.DS_Store
+**/.idea/
+**/.vscode/
+**/dist/
+**/.turbo/
+apps/mobile/.dart_tool/
+apps/mobile/build/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/windows/
+apps/mobile/linux/
+apps/mobile/macos/
+apps/mobile/web/
+services/go-template/bin/
+services/go-template/pkg/

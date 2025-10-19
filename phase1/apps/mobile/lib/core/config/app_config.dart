@@ -7,10 +7,12 @@ class AppConfig {
   AppConfig({
     required this.apiBaseUrl,
     required this.featureFlags,
+    required this.oidcSharedSecret,
   });
 
   final String apiBaseUrl;
   final Map<String, bool> featureFlags;
+  final String oidcSharedSecret;
 
   static Future<AppConfig> load() async {
     try {
@@ -19,9 +21,11 @@ class AppConfig {
       final flags = (json['featureFlags'] as Map<String, dynamic>).map(
         (key, value) => MapEntry(key, value as bool),
       );
+      final secret = (json['oidcSharedSecret'] as String?) ?? 'dev-oidc-secret';
       return AppConfig(
         apiBaseUrl: json['apiBaseUrl'] as String,
         featureFlags: flags,
+        oidcSharedSecret: secret,
       );
     } catch (e) {
       // Fallback to cloud URL
@@ -33,6 +37,7 @@ class AppConfig {
           'ff.leaderboard.v1': false,
           'ff.wallet.readonly': false,
         },
+        oidcSharedSecret: 'dev-oidc-secret',
       );
     }
   }

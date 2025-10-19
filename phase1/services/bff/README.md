@@ -18,6 +18,8 @@ Le migrazioni SQL sono in `../../infra/migrations`. In sviluppo Docker Compose l
 psql postgres://postgres:postgres@localhost:5432/xxx_app -f ../../infra/migrations/0001_create_app_user.sql
 ```
 
+La tabella `app_user` impone una chiave univoca (`oidc_provider`, `oidc_sub`) e campi non nulli per garantire idempotenza agli accessi federati.
+
 ### Test & Lint
 
 ```powershell

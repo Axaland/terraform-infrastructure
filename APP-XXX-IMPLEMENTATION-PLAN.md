@@ -2,6 +2,16 @@
 
 > **Obiettivo**: portare in produzione l’app XXX con un approccio graduale, sicuro e osservabile end-to-end, partendo dall’infrastruttura già pronta.
 
+## Moduli di fase
+
+- `phase0/` – Bootstrap & impalcatura (deliverable: shell app + `/healthz`)
+- `phase1/` – Registrazione & login
+- `phase2/` – Profilo & consensi
+- `phase3/` – Localizzazione
+- ...
+
+Ogni cartella `phaseX/` contiene codice, script e documentazione dedicata all'incremento previsto.
+
 ## 0. Prerequisiti trasversali
 
 ### Stack tecnologico

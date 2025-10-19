@@ -13,9 +13,12 @@
 2. Workflow CI/CD automatico attivo in .github/workflows/
 
 ###  Struttura
+- Consulta `DIRECTORY-GUIDE.md` per l'elenco completo e aggiornato delle directory e dei relativi utilizzi.
 - /infra/terraform/bootstrap/ - Backend S3/DynamoDB
 - /infra/terraform/modules/ - Moduli riutilizzabili  
 - /infra/terraform/dev/ - Ambiente sviluppo
 - /minimal-dev/ - Configurazione OIDC deployata
+- /phase0/ - Bootstrap applicativo (Fase 0) con monorepo e shell servizi
+- /phase1/ - Implementazione registrazione/login (Fase 1)
 
 Deploy completato: 10/07/2025 23:07:48

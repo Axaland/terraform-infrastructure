@@ -37,7 +37,32 @@ export class UserRepository {
   }): Promise<AppUser> {
     const existing = await this.findByOidc(params.provider, params.sub);
     if (existing) {
-      return existing;
+      const updatedValues = {
+        email: params.email ?? existing.email,
+        nickname: params.nickname ?? existing.nickname,
+        country: params.country ?? existing.country,
+        lang: params.lang ?? existing.lang
+      };
+      const updateResult = await this.options.pool.query<AppUser>(
+        `
+          UPDATE app_user
+          SET email = $1,
+              nickname = $2,
+              country = $3,
+              lang = $4,
+              updated_at = now()
+          WHERE id = $5
+          RETURNING *;
+        `,
+        [
+          updatedValues.email,
+          updatedValues.nickname,
+          updatedValues.country,
+          updatedValues.lang,
+          existing.id
+        ]
+      );
+      return updateResult.rows[0] ?? existing;
     }
     const id = randomUUID();
     const query = `

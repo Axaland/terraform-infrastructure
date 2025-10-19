@@ -6,13 +6,16 @@ CREATE TABLE IF NOT EXISTS app_user (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   email TEXT UNIQUE,
-  oidc_provider TEXT,
-  oidc_sub TEXT,
+  oidc_provider TEXT NOT NULL,
+  oidc_sub TEXT NOT NULL,
   nickname TEXT,
   country CHAR(2),
   lang CHAR(2),
   status TEXT CHECK (status IN ('active','banned')) DEFAULT 'active'
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS app_user_oidc_provider_sub_idx
+  ON app_user (oidc_provider, oidc_sub);
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$

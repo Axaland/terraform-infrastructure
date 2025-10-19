@@ -1,0 +1,24 @@
+{
+  "name": "app-xxx-phase0",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Monorepo bootstrap per la Fase 0 dell'APP XXX",
+  "scripts": {
+    "bootstrap": "pnpm install --recursive",
+    "lint": "pnpm lint --recursive",
+    "test": "pnpm test --recursive",
+    "dev:bff": "pnpm --filter bff dev",
+    "dev:go": "pnpm --filter go-template dev",
+    "dev:mobile": "flutter run",
+    "dev:admin": "pnpm --filter admin dev"
+  },
+  "devDependencies": {
+    "pnpm": "9.10.0"
+  },
+  "workspaces": [
+    "apps/mobile",
+    "apps/admin",
+    "services/bff",
+    "services/go-template"
+  ]
+}

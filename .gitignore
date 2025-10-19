@@ -44,6 +44,7 @@ Thumbs.db
 # Archives and backups
 backups/
 *.zip
+.backup-staging-*
 
 # Node dependencies
 node_modules/

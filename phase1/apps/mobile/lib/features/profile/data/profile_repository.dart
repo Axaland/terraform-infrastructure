@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,14 +8,23 @@ class Profile {
   Profile({
     required this.id,
     required this.nickname,
+    this.country,
+    this.language,
+    this.status = 'active',
   });
 
   final String id;
   final String nickname;
+  final String? country;
+  final String? language;
+  final String status;
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
         id: json['id'] as String,
         nickname: json['nickname'] as String? ?? '',
+        country: json['country'] as String?,
+        language: json['lang'] as String?,
+        status: json['status'] as String? ?? 'active',
       );
 }
 

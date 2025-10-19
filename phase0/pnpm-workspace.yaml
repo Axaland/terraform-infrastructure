@@ -1,0 +1,5 @@
+packages:
+  - apps/mobile
+  - apps/admin
+  - services/bff
+  - services/go-template

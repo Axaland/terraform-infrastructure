@@ -56,6 +56,8 @@ export const authService = {
     return {
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
+      expires_in: tokens.expiresIn,
+      token_type: 'Bearer',
       user: {
         id: user.id,
         nickname: user.nickname,
@@ -82,7 +84,9 @@ export const authService = {
       });
       return {
         access_token: tokens.accessToken,
-        refresh_token: tokens.refreshToken
+        refresh_token: tokens.refreshToken,
+        expires_in: tokens.expiresIn,
+        token_type: 'Bearer'
       };
     } catch (error) {
       throw createHttpError(401, 'Invalid refresh token');

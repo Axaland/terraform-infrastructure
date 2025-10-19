@@ -51,7 +51,7 @@ cd infra
 docker compose up --build
 ```
 
-Il compose avvia PostgreSQL e il BFF (in watch mode). La migrazione SQL viene applicata automaticamente al bootstrap del servizio.
+Il compose avvia PostgreSQL e il BFF (in watch mode). Le migrazioni SQL in `infra/migrations` vengono eseguite automaticamente al primo bootstrap grazie al mount `docker-entrypoint-initdb.d`.
 
 ### 3. Avvio app mobile
 
@@ -61,7 +61,7 @@ flutter pub get
 flutter run
 ```
 
-Nel file `lib/services/auth/mock_auth_service.dart` sono presenti token mock generati firmando un payload con `ID_TOKEN_SHARED_SECRET`.
+Configurare `assets/config/remote_config.json` per puntare al BFF locale (es. `http://10.0.2.2:3000` per emulatori Android) e assicurarsi che `oidcSharedSecret` combaci con `ID_TOKEN_SHARED_SECRET`. Il provider locale (`lib/features/auth/data/local_identity_provider.dart`) genera token mock firmati con questa chiave condivisa.
 
 ### 4. Quality gates
 

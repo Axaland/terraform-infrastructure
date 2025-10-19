@@ -1,5 +1,6 @@
 {
   "apiBaseUrl": "http://dev-alb-1851605074.eu-west-1.elb.amazonaws.com",
+  "oidcSharedSecret": "dev-oidc-secret",
   "featureFlags": {
     "ff.onboarding.v1": true,
     "ff.catalog.v1": false,

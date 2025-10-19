@@ -1,30 +1,73 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:xxx_mobile/main.dart';
+import 'package:xxx_mobile/core/config/app_config.dart';
+import 'package:xxx_mobile/features/auth/application/auth_notifier.dart';
+import 'package:xxx_mobile/features/auth/model/auth_session.dart';
+import 'package:xxx_mobile/features/auth/presentation/auth_gate.dart';
+import 'package:xxx_mobile/features/onboarding/presentation/onboarding_page.dart';
+
+class _StubAuthNotifier extends AuthNotifier {
+  _StubAuthNotifier(this._session);
+
+  final AuthSession _session;
+
+  @override
+  Future<AuthSession> build() async => _session;
+
+  @override
+  Future<void> login({
+    required String provider,
+    required String idToken,
+    required String deviceId,
+  }) async {}
+
+  @override
+  Future<void> logout() async {}
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  final stubConfig = AppConfig(
+    apiBaseUrl: 'http://localhost:3000',
+    featureFlags: const {
+      'ff.onboarding.v1': true,
+      'ff.catalog.v1': false,
+    },
+    oidcSharedSecret: 'test-secret',
+  );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('Onboarding mostra il primo messaggio', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(() => _StubAuthNotifier(const AuthSession.anonymous())),
+        ],
+        child: const MaterialApp(home: OnboardingPage()),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.textContaining('Benvenuto in XXX'), findsOneWidget);
+    expect(find.byType(PageView), findsOneWidget);
+  });
+
+  testWidgets('AuthGate mostra i pulsanti di login', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(() => _StubAuthNotifier(const AuthSession.anonymous())),
+          appConfigProvider.overrideWithValue(stubConfig),
+        ],
+        child: const MaterialApp(home: AuthGate()),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Accedi al tuo profilo'), findsOneWidget);
+    expect(find.text('Continua con Google'), findsOneWidget);
+    expect(find.text('Continua con Apple'), findsOneWidget);
   });
 }

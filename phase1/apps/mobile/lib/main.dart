@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/app_config.dart';
 import 'core/telemetry/telemetry.dart';
+import 'core/theme/app_theme.dart';
 import 'features/auth/application/auth_notifier.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_gate.dart';
@@ -45,7 +46,6 @@ class _ShellApp extends ConsumerWidget {
   const _ShellApp();
 
   @override
-  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter(
       initialLocation: '/onboarding',
@@ -68,22 +68,32 @@ class _ShellApp extends ConsumerWidget {
         if (session.isLoading) {
           return null;
         }
-        if (!session.hasValue || !session.value!.isAuthenticated) {
-          return '/auth';
+        if (session.hasError) {
+          return state.matchedLocation == '/auth' ? null : '/auth';
         }
-        if (state.matchedLocation == '/profile') {
-          return null;
+        final value = session.value;
+        final isAuthenticated = value != null && value.isAuthenticated;
+        final location = state.matchedLocation;
+
+        if (!isAuthenticated) {
+          if (location == '/auth' || location == '/onboarding') {
+            return null;
+          }
+          return '/onboarding';
         }
-        return '/profile';
+
+        if (location == '/auth' || location == '/onboarding') {
+          return '/profile';
+        }
+
+        return null;
       },
     );
 
     return MaterialApp.router(
       title: 'XXX App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3A6EA5)),
-        useMaterial3: true,
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
       routerConfig: router,
       locale: const Locale('en'),
       supportedLocales: const [

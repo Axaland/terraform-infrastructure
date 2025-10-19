@@ -4,6 +4,7 @@ import { config } from '../config';
 export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
+  expiresIn: number;
 };
 
 type TokenPayload = {
@@ -25,7 +26,7 @@ export const tokenService = {
     const refreshToken = jwt.sign({ sub: payload.sub }, config.jwtRefreshSecret, {
       expiresIn: config.refreshTokenTtlSeconds
     });
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, expiresIn: config.tokenTtlSeconds };
   },
 
   verifyRefreshToken(token: string) {
