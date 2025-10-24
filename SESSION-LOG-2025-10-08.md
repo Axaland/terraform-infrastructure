@@ -7,6 +7,13 @@
 - Verificati i segreti GitHub Actions: il repository usa esclusivamente l'ARN di ruolo OIDC (`AWS_GITHUB_CI_ROLE_ARN`), quindi non è necessario salvare la nuova chiave.
 - Prossimi passi: monitorare le pipeline CI al prossimo run e programmare la prossima rotazione entro 90 giorni.
 
+## Aggiornamenti 24/10/2025 – Fix trust policy GitHub Actions
+- Individuato errore `sts:AssumeRoleWithWebIdentity` nei workflow dovuto al cambio di casing dell'organizzazione GitHub (`Axaland`).
+- Aggiornato `minimal-dev/main.tf` per allineare il subject OIDC a `repo:Axaland/terraform-infrastructure:*` e committato su `master` (`4edb8fe`).
+- Concesso permessi IAM ad `AXALAND-1` e modificata manualmente la trust policy del ruolo `github-ci-role-dev` nella console IAM con il nuovo subject.
+- Verificata l'assenza di ruoli stage/prod analoghi; nessuna ulteriore modifica necessaria.
+- Rilanciato il workflow Terraform CI/CD su GitHub Actions: esecuzione completata con successo dopo l'aggiornamento.
+
 ## Contesto operativo
 - **Data/Ora locale**: 08/10/2025 11:56 CEST
 - **Root progetto**: `C:\Users\axala\OneDrive\Desktop\Backup_Infrastruttura_2025-10-05_18-09\new`
