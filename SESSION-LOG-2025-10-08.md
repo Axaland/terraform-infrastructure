@@ -13,6 +13,7 @@
 - Concesso permessi IAM ad `AXALAND-1` e modificata manualmente la trust policy del ruolo `github-ci-role-dev` nella console IAM con il nuovo subject.
 - Verificata l'assenza di ruoli stage/prod analoghi; nessuna ulteriore modifica necessaria.
 - Rilanciato il workflow Terraform CI/CD su GitHub Actions: esecuzione completata con successo dopo l'aggiornamento.
+- Creato lo script `test-phase1.ps1` per eseguire automaticamente i test BFF (`npm test`) e mobile (`flutter test`) senza più errori di percorso, documentandone l'uso nei README.
 
 ## Contesto operativo
 - **Data/Ora locale**: 08/10/2025 11:56 CEST

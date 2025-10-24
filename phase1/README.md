@@ -65,6 +65,17 @@ Configurare `assets/config/remote_config.json` per puntare al BFF locale (es. `h
 
 ### 4. Quality gates
 
+Per automatizzare l'esecuzione puoi usare lo script radice `..\..\test-phase1.ps1`, che orchestri sia i test BFF sia i test Flutter gestendo i percorsi. Esempio:
+
+```powershell
+pwsh ..\..\test-phase1.ps1
+```
+
+Opzioni utili:
+
+- `-SkipBackend` / `-SkipMobile` per escludere una suite;
+- `-NoInstall` per saltare `npm install` e `flutter pub get` se le dipendenze sono già state ripristinate.
+
 ```powershell
 cd ..\services\bff
 npm install

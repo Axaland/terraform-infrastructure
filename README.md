@@ -21,4 +21,9 @@
 - /phase0/ - Bootstrap applicativo (Fase 0) con monorepo e shell servizi
 - /phase1/ - Implementazione registrazione/login (Fase 1)
 
+### Utility
+- `test-phase1.ps1` esegue in sequenza i test automatizzati di BFF (`npm test`) e mobile Flutter (`flutter test`) con gestione automatica dei percorsi. Opzioni disponibili:
+	- `-SkipBackend` o `-SkipMobile` per saltare singole suite;
+	- `-NoInstall` per evitare il restore delle dipendenze.
+
 Deploy completato: 10/07/2025 23:07:48
